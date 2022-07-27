@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER
+      - N8N_BASIC_AUTH_PASSWORD
+      - N8N_HOST=${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - NODE_ENV=production
+      - EXECUTIONS_PROCESS=main
+      - EXECUTIONS_TIMEOUT=60
+      - EXECUTIONS_TIMEOUT_MAX=120
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - EXECUTIONS_DATA_PRUNE=true
+      - EXECUTIONS_DATA_MAX_AGE
+      #- QUEUE_BULL_REDIS_HOST=redis
+      #- QUEUE_BULL_REDIS_PORT=6379
+      - WEBHOOK_TUNNEL_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=${DB_NAME}
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_USER=${DB_USERNAME}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+      - N8N_EMAIL_MODE=smtp
+      - N8N_SMTP_HOST
+      - N8N_SMTP_PORT
+      - N8N_SMTP_USER
+      - N8N_SMTP_PASS
+      - N8N_SMTP_SENDER
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_FOLDER}/.n8n:/home/node/.n8n
+      - ${DATA_FOLDER}/.n8n:/root/.n8n
+    depends_on:
+      - db
+
+  db:
+    image: postgres:12
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ${DATA_FOLDER}/.postgresql_data:/var/lib/postgresql/data
